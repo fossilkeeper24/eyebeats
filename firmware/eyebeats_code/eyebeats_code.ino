@@ -7,7 +7,8 @@
 #include <Adafruit_SSD1306.h>
 
 MAX30105 particleSensor;
-PCF8574 i2c_ctrl(0x38); //0x20
+//PCF8574 i2c_ctrl(0x38); //0x20
+Adafruit_PCF8574 pcf;
 
 #define screenWidth 128;
 #define screenHeight 64
@@ -23,14 +24,14 @@ int beatAvg;
 int BUT1 = A0;
 int BUT2 = A1;
 
-int LED1 = P0;
-int LED2 = P1;
-int LED3 = P2;
-int LED4 = P3;
-int LED5 = P4;
-int LED6 = P5;
-int LED7 = P6;
-int LED8 = P7;
+//int LED1 = P0;
+//int LED2 = P1;
+//int LED3 = P2;
+//int LED4 = P3;
+//int LED5 = P4;
+//int LED6 = P5;
+//int LED7 = P6;
+//int LED8 = P7;
 
 
 void setup() {
@@ -38,45 +39,51 @@ void setup() {
   Wire.setClock(400000);
   Serial.begin(9600);
 
-  //set IO Expander pins to output
-  pcf8574.pinMode(LED1, OUTPUT);
-  pcf8574.pinMode(LED2, OUTPUT);
-  pcf8574.pinMode(LED3, OUTPUT);
-  pcf8574.pinMode(LED4, OUTPUT);
-  pcf8574.pinMode(LED5, OUTPUT);
-  pcf8574.pinMode(LED6, OUTPUT);
-  pcf8574.pinMode(LED7, OUTPUT);
-  pcf8574.pinMode(LED8, OUTPUT);
+  while(!Serial) {delay(10);}
+  Serial.println("Adafruit PCF8574 LED blink test");
+
+  if(!pcf.begin(0x20, &Wire)) {
+    Serial.println("Couldn't find PCF8574");
+    while(1);
+  }
+  pcf.pinMode(0, OUTPUT);
+  pcf.pinMode(1, OUTPUT);
+  pcf.pinMode(2, OUTPUT);
+  pcf.pinMode(3, OUTPUT);
+  pcf.pinMode(4, OUTPUT);
+  pcf.pinMode(5, OUTPUT);
+  pcf.pinMode(6, OUTPUT);
+  pcf.pinMode(7, OUTPUT);
 
   //set rp2040 input pins
   pinMode(BUT1, INPUT);
   pinMode(BUT2, INPUT);
 
-  pcf8574.begin();
+  pcf.begin();
 
   //lights turn on one by one
-  pcf8574.digitalWrite(LED1, HIGH);
+  pcf.digitalWrite(0, HIGH);
   delay(250);
-  pcf8574.digitalWrite(LED2, HIGH);
+  pcf.digitalWrite(1, HIGH);
   delay(250);
-  pcf8574.digitalWrite(LED3, HIGH);
+  pcf.digitalWrite(2, HIGH);
   delay(250);
-  pcf8574.digitalWrite(LED4, HIGH);
+  pcf.digitalWrite(3, HIGH);
   delay(250);
-  pcf8574.digitalWrite(LED5, HIGH);
+  pcf.digitalWrite(4, HIGH);
   delay(250);
-  pcf8574.digitalWrite(LED6, HIGH);
+  pcf.digitalWrite(5, HIGH);
   delay(250);
-  pcf8574.digitalWrite(LED7, HIGH);
+  pcf.digitalWrite(6, HIGH);
   delay(250);
-  pcf8574.digitalWrite(LED8, HIGH);
+  pcf.digitalWrite(7, HIGH);
   delay(250);
 
   for( x = 0 ; x < 8 ; x++) { //turn the lights off
-    pcf8574.digitalWrite(x, LOW);
+    pcf.digitalWrite(x, LOW);
   }
 
-  pcf8574.end();
+  //pcf.end();
 
 
 
@@ -93,7 +100,7 @@ void setup() {
   particleSensor.setPulseAmplitudeRed(0x0A); //Turn Red LED to low to indicate sensor is running
   particleSensor.setPulseAmplitudeGreen(0); //Turn off Green LED
 
-  particleSensor.end();
+  //particleSensor.end();
 
   display.begin(SSD1306_SWITCHCAPVCC ,0x3C);
 
