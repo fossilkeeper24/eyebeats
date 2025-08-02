@@ -1,12 +1,18 @@
-//initially copied off of https://www.instructables.com/Guide-to-Using-MAX30102-Heart-Rate-and-Oxygen-Sens/
+//used this guide https://www.instructables.com/Guide-to-Using-MAX30102-Heart-Rate-and-Oxygen-Sens/
 
 #include <Wire.h>
 #include "MAX30105.h"
 #include "heartrate.h"
+#include <Adafruit_PCF8574.h> 
+#include <Adafruit_SSD1306.h>
 
-MAX30105 particlesensor;
+MAX30105 particleSensor;
+PCF8574 i2c_ctrl(0x38); //0x20
 
-const byte RATE_SIZE = 4 //increase this for more averaging. 4 is good.
+#define screenWidth 128;
+#define screenHeight 64
+
+const byte RATE_SIZE = 4; //increase this for more averaging. 4 is good.
 byte rates[RATE_SIZE]; //Array of heart rates
 byte rateSpot = 0;
 long lastBeat = 0; //time at which last beat ocurred
@@ -14,8 +20,66 @@ long lastBeat = 0; //time at which last beat ocurred
 float beatsPerMinute;
 int beatAvg;
 
+int BUT1 = A0;
+int BUT2 = A1;
+
+int LED1 = P0;
+int LED2 = P1;
+int LED3 = P2;
+int LED4 = P3;
+int LED5 = P4;
+int LED6 = P5;
+int LED7 = P6;
+int LED8 = P7;
+
+
 void setup() {
-  Serial.begin(115200);
+  int x;
+  Wire.setClock(400000);
+  Serial.begin(9600);
+
+  //set IO Expander pins to output
+  pcf8574.pinMode(LED1, OUTPUT);
+  pcf8574.pinMode(LED2, OUTPUT);
+  pcf8574.pinMode(LED3, OUTPUT);
+  pcf8574.pinMode(LED4, OUTPUT);
+  pcf8574.pinMode(LED5, OUTPUT);
+  pcf8574.pinMode(LED6, OUTPUT);
+  pcf8574.pinMode(LED7, OUTPUT);
+  pcf8574.pinMode(LED8, OUTPUT);
+
+  //set rp2040 input pins
+  pinMode(BUT1, INPUT);
+  pinMode(BUT2, INPUT);
+
+  pcf8574.begin();
+
+  //lights turn on one by one
+  pcf8574.digitalWrite(LED1, HIGH);
+  delay(250);
+  pcf8574.digitalWrite(LED2, HIGH);
+  delay(250);
+  pcf8574.digitalWrite(LED3, HIGH);
+  delay(250);
+  pcf8574.digitalWrite(LED4, HIGH);
+  delay(250);
+  pcf8574.digitalWrite(LED5, HIGH);
+  delay(250);
+  pcf8574.digitalWrite(LED6, HIGH);
+  delay(250);
+  pcf8574.digitalWrite(LED7, HIGH);
+  delay(250);
+  pcf8574.digitalWrite(LED8, HIGH);
+  delay(250);
+
+  for( x = 0 ; x < 8 ; x++) { //turn the lights off
+    pcf8574.digitalWrite(x, LOW);
+  }
+
+  pcf8574.end();
+
+
+
   Serial.println("Initializing...");
 
   // Initialize sensor
@@ -28,6 +92,15 @@ void setup() {
   particleSensor.setup(); //Configure sensor with default settings
   particleSensor.setPulseAmplitudeRed(0x0A); //Turn Red LED to low to indicate sensor is running
   particleSensor.setPulseAmplitudeGreen(0); //Turn off Green LED
+
+  particleSensor.end();
+
+  display.begin(SSD1306_SWITCHCAPVCC ,0x3C);
+
+
+
+
+
 }
 
 void loop() {
@@ -48,11 +121,11 @@ void loop() {
      for (byte x = 0 ; x < RATE_SIZE ; x++)
        beatAvg += rates[x];
      beatAvg /= RATE_SIZE;
-   }
+    }
+   
   }
- }
 
-
+//what the sensor set up guide said to get serial outputs
  Serial.print("IR=");
  Serial.print("irValue");
  Serial.print(", BPM=");
@@ -62,9 +135,9 @@ void loop() {
  
  if (irValue < 50000){
    Serial.print("No finger?");
+ }
 
-
-Serial.println();
+ Serial.println();
 }
 
 //#define HRM_ADDR 0x57
